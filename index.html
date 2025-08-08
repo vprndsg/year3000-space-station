@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Station Explorer</title>
+  <style>
+    /* Reset default margins and hide scrollbars */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background-color: #000;
+    }
+    /* On‑screen instructions */
+    #overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="overlay">
+    <strong>Space Station Explorer</strong><br>
+    Use arrow keys to move around the space station.<br>
+    Explore the year 3000 space station's rooms and consoles!
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
