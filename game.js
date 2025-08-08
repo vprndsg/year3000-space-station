@@ -60,15 +60,18 @@
     });
   }
 
-  // Define map constants. 0 = floor, 1 = wall, 2 = console
-  // The map is 20x20. We design a simple space station with four rooms.
-  const MAP_W = 20;
-  const MAP_H = 20;
+  // Define map constants. 0 = floor/walkway, 1 = wall, 2 = console.
+  // To create a more spacious station, bump the map size to 30x30. The
+  // additional space allows each wing of the station to feel distinct
+  // instead of being crammed into a tiny grid. A three‑tile‑wide
+  // cross corridor connects the central hub to each room.
+  const MAP_W = 30;
+  const MAP_H = 30;
   const map = [];
   for (let y = 0; y < MAP_H; y++) {
     const row = [];
     for (let x = 0; x < MAP_W; x++) {
-      row.push(0);
+      row.push(0); // initialise everything as floor
     }
     map.push(row);
   }
@@ -95,39 +98,52 @@
     }
   }
 
-  // Central hub: draw a cross walkway in the middle of the map.
+  // Central hub: draw a three‑tile‑wide cross corridor in the middle of the map.
   const hubX = Math.floor(MAP_W / 2);
   const hubY = Math.floor(MAP_H / 2);
-  for (let i = 0; i < MAP_W; i++) {
-    map[hubY][i] = 0;
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let i = 0; i < MAP_W; i++) {
+      map[hubY + dx][i] = 0;
+    }
   }
-  for (let j = 0; j < MAP_H; j++) {
-    map[j][hubX] = 0;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let j = 0; j < MAP_H; j++) {
+      map[j][hubX + dy] = 0;
+    }
   }
 
-  // Build rooms: north lab (top), south engineering (bottom), east quarters, west hydroponics.
-  // Each room includes a couple of consoles.
-  buildRoom(hubX - 2, 0, hubX + 2, 5, [[hubX, 2]]);             // north lab
-  buildRoom(hubX - 2, MAP_H - 6, hubX + 2, MAP_H - 1, [[hubX, MAP_H - 3]]); // south engineering
-  buildRoom(MAP_W - 6, hubY - 2, MAP_W - 1, hubY + 2, [[MAP_W - 3, hubY]]); // east quarters
-  buildRoom(0, hubY - 2, 5, hubY + 2, [[2, hubY]]);             // west hydroponics
+  // Build rooms: define larger rectangles for each wing. The rooms are
+  // connected to the hub via the three‑tile‑wide corridors. Console
+  // positions are chosen near the centre of each room.
+  buildRoom(hubX - 3, 0, hubX + 3, 7, [[hubX, 3]]);                     // north lab
+  buildRoom(hubX - 3, MAP_H - 8, hubX + 3, MAP_H - 1, [[hubX, MAP_H - 4]]); // south engineering
+  buildRoom(MAP_W - 8, hubY - 3, MAP_W - 1, hubY + 3, [[MAP_W - 4, hubY]]); // east quarters
+  buildRoom(0, hubY - 3, 7, hubY + 3, [[3, hubY]]);                     // west hydroponics
 
-  // Additional corridors to connect rooms to the central hub.
-  // North
-  for (let y = 6; y < hubY; y++) {
-    map[y][hubX] = 0;
+  // Additional corridors widen the links between the hub and rooms. North
+  // corridor: carve a vertical strip above the hub until reaching the north room.
+  for (let y = 8; y < hubY - 1; y++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      map[y][hubX + dx] = 0;
+    }
   }
-  // South
-  for (let y = hubY + 1; y < MAP_H - 6; y++) {
-    map[y][hubX] = 0;
+  // South corridor
+  for (let y = hubY + 2; y < MAP_H - 8; y++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      map[y][hubX + dx] = 0;
+    }
   }
-  // East
-  for (let x = hubX + 1; x < MAP_W - 6; x++) {
-    map[hubY][x] = 0;
+  // East corridor
+  for (let x = hubX + 2; x < MAP_W - 8; x++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      map[hubY + dy][x] = 0;
+    }
   }
-  // West
-  for (let x = 6; x < hubX; x++) {
-    map[hubY][x] = 0;
+  // West corridor
+  for (let x = 8; x < hubX - 1; x++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      map[hubY + dy][x] = 0;
+    }
   }
 
   // Player state
@@ -195,11 +211,19 @@
         }
       }
     }
-    // Draw player last
-    const playerScreenX = (player.x - player.y) * (TILE_W / 2) + offsetX;
-    const playerScreenY = (player.x + player.y) * (TILE_H / 2) + offsetY;
-    const charHeight = TILE_H * 2;
-    ctx.drawImage(assets.astronaut, playerScreenX, playerScreenY - (charHeight - TILE_H), TILE_W, charHeight);
+        // Draw player last. Instead of relying on an external sprite, we
+        // represent the player with a simple coloured marker. This avoids
+        // dependency on a separate astronaut image and keeps the focus on
+        // the environment. Compute the screen coordinate of the tile the
+        // player occupies and then draw a small ellipse centred on that tile.
+        const playerScreenX = (player.x - player.y) * (TILE_W / 2) + offsetX;
+        const playerScreenY = (player.x + player.y) * (TILE_H / 2) + offsetY;
+        const cx = playerScreenX + TILE_W / 2;
+        const cy = playerScreenY + TILE_H / 2;
+        ctx.fillStyle = '#00ffcc';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, TILE_W * 0.25, TILE_H * 0.25, 0, 0, Math.PI * 2);
+        ctx.fill();
   }
 
   function loop() {
